@@ -5,12 +5,13 @@ import { ShieldCheck, Video, Eye, MonitorCheck } from "lucide-react";
 
 const Instruction = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+<div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+
       <Navbar />
 
       {/* Main container */}
       <div className="flex-grow flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-4xl bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-10 h-[85vh] mt-10 flex flex-col">
+        <div className="w-full max-w-4xl bg-gradient-to-br from-indigo-50 via-white to-purple-50 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-10 h-[85vh] mt-10 flex flex-col">
           {/* Heading */}
           <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4">
             Online Competency Test Instructions

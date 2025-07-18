@@ -85,7 +85,7 @@ const handleCamera = async () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <Navbar />
       <div className="flex-grow flex items-center justify-center p-4 mt-16 md:p-8">
         <div className="w-full bg-white rounded-2xl shadow-2xl p-6 md:p-10 flex flex-col gap-8">

@@ -43,35 +43,41 @@ const ExamPage = () => {
 
   // start camera on mount
   useEffect(() => {
-    const startCam = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "user",
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-          },
-        });
-        if (videoRef.current) videoRef.current.srcObject = stream;
-        setCameraOn(true);
-      } catch (err) {
-        console.error("Camera access denied:", err);
+  const startCam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute("autoplay", "");
+        videoRef.current.setAttribute("muted", "");
+        videoRef.current.setAttribute("playsinline", "");
       }
-    };
-    startCam();
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
-      }
-    };
-  }, []);
+      setCameraOn(true);
+    } catch (err) {
+      console.error("Camera access denied:", err);
+    }
+  };
+  startCam();
+  return () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
+    }
+  };
+}, []);
+
 
   const handleSubmit = () => {
     alert("Test Submitted!");
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100 overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
       <Navbar />
 
       <div className="relative flex-grow mt-16 p-2 md:p-4">
