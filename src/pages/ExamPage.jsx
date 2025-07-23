@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/user/Navbar";
 
 const ExamPage = () => {
   const [cameraOn, setCameraOn] = useState(false);
@@ -20,6 +20,7 @@ const ExamPage = () => {
       };
     }
   };
+
   const handleMouseMove = (e) => {
     if (isDragging && window.innerWidth >= 1024) {
       setPos({
@@ -76,6 +77,8 @@ const ExamPage = () => {
     alert("Test Submitted!");
   };
 
+
+  
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
       <Navbar />
@@ -185,3 +188,7 @@ const ExamPage = () => {
 };
 
 export default ExamPage;
+
+
+
+ 

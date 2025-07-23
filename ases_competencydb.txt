@@ -1,0 +1,6 @@
+
+host: srv868854.hstgr.cloud
+username: artlabcom_ases_competency
+db_name: artlabcom_ases_competency
+password:S9867867878$#@4email
+

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/user/Navbar";
 import { Camera, Mic, Volume2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -13,7 +13,7 @@ const SystemCheck = () => {
   const micStreamRef = useRef(null);
   const audioContextRef = useRef(null);
   const sourceRef = useRef(null);
-
+ 
   // CAMERA start/stop
 const handleCamera = async () => {
   if (!cameraOn) {
@@ -83,6 +83,9 @@ const handleCamera = async () => {
       });
     }
   };
+
+
+ 
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50">
@@ -192,3 +195,7 @@ const handleCamera = async () => {
 };
 
 export default SystemCheck;
+
+
+
+

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/user/Navbar";
 import { ShieldCheck, Video, Eye, MonitorCheck } from "lucide-react";
 
 const Instruction = () => {
@@ -14,6 +14,7 @@ const Instruction = () => {
         <div className="w-full max-w-4xl bg-gradient-to-br from-indigo-50 via-white to-purple-50 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-10 h-[85vh] mt-10 flex flex-col">
           {/* Heading */}
           <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4">
+            
             Online Competency Test Instructions
           </h1>
           <p className="text-center text-sm text-gray-500 mb-6">
