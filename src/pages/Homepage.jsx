@@ -4,7 +4,7 @@ import Navbar from "../components/user/Navbar";
 
 const Homepage = () => {
   const navigate = useNavigate();
-  const [loginType, setLoginType] = useState("user"); // "user" or "company"
+  const [loginType, setLoginType] = useState("user"); // "user" or "company
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
