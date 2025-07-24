@@ -48,7 +48,7 @@ const CompanyDashboard = () => {
       {/* Sidebar */}
       <aside
         className={`fixed md:static inset-y-0 left-0 z-30 bg-white shadow-md transform md:translate-x-0 transition-transform duration-200 ease-in-out 
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-64 flex flex-col`}
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-64  md:w-40 lg:w-64 flex flex-col`}
       >
         <div className="p-6 border-b flex justify-between items-center">
           <div>

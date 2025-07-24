@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-
+import toast from 'react-hot-toast'
 const Candidates = () => {
   const [candidates, setCandidates] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -17,10 +17,10 @@ const Candidates = () => {
       });
       const data = await res.json();
       if (res.ok) setCandidates(data);
-      else alert(data.message || "Failed to load candidates");
+      else toast.error(data.message || "Failed to load candidates");
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      toast.error("Server error");
     }
   };
 
@@ -48,16 +48,16 @@ const Candidates = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("✅ Candidate registered!");
+        toast.success("✅ Candidate registered!");
         setShowModal(false);
         setForm({ name: "", email: "", password: "" });
         fetchCandidates();
       } else {
-        alert(data.message || "Registration failed");
+        toast.error(data.message || "Registration failed");
       }
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      toast.error("Server error");
     } finally {
       setLoading(false);
     }
