@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/user/Navbar";
+import { authAPI } from "../utils/api";
 
 const Homepage = () => {
   const navigate = useNavigate();
@@ -9,38 +10,31 @@ const Homepage = () => {
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const endpoint =
-      loginType === "user"
-        ? `${import.meta.env.VITE_API_BASE_URL}/users/login`
-        : `${import.meta.env.VITE_API_BASE_URL}/companies/login`;
+    e.preventDefault();
+    try {
+      const credentials = loginType === "company"
+        ? { email, contact_email: email, password } // backend expects contact_email for companies
+        : { email, password };
 
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, contact_email: email, password }), // backend expects contact_email for companies
-    });
+      const data = loginType === "user"
+        ? await authAPI.userLogin(credentials)
+        : await authAPI.companyLogin(credentials);
 
-    const data = await res.json();
-    if (res.ok) {
       if (data.token) {
         localStorage.setItem("token", data.token);
-            localStorage.setItem("role", loginType); // "user" or "company"
+        localStorage.setItem("role", loginType); // "user" or "company"
       }
+      
       if (loginType === "user") {
         navigate("/user-dashboard");
       } else {
         navigate("/company-dashboard");
       }
-    } else {
-      alert(data.message || "Login failed");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Login failed");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Server error");
-  }
-};
+  };
 
  
 

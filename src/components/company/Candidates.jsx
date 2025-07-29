@@ -69,7 +69,7 @@ const Candidates = () => {
         <h2 className="text-2xl font-bold text-gray-800">👥 Candidates</h2>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-indigo-600 cursor-pointer text-white rounded-lg hover:bg-indigo-700"
+          className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white cursor-pointer  rounded-lg hover:bg-gradient-to-r hover:from-purple-600 hover:to-indigo-600  hover:shadow-lg hover:scale-[1.02] transition-all duration-200 "
         >
           ➕ Register Candidate
         </button>
@@ -96,7 +96,7 @@ const Candidates = () => {
 
       {/* Modal for registering candidate */}
       {showModal && (
-        <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0  bg-black/10 backdrop-blur-sm  flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Register Candidate</h2>
             <form onSubmit={handleRegister} className="space-y-4">
@@ -130,14 +130,14 @@ const Candidates = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-gray-200 rounded"
+                  className="px-4 py-2 cursor-pointer bg-gray-200 rounded"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  className="px-4 py-2 cursor-pointer bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 >
                   {loading ? "Saving..." : "Register"}
                 </button>

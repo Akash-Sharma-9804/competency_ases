@@ -1,36 +1,30 @@
 import React, { useEffect, useState } from "react";
+import { companyAPI } from "../../utils/api";
 
 const CompanyProfile = () => {
   const [company, setCompany] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ name: "", address: "", about: "", website_url: "", logo_url: "" });
 
-  const token = localStorage.getItem("token");
-
   // Fetch company profile on mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/companies/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const data = await companyAPI.getProfile();
+        setCompany(data);
+        setForm({
+          name: data.name || "",
+          address: data.address || "",
+          about: data.about || "",
+          website_url: data.website_url || "",
+          logo_url: data.logo_url || "",
         });
-        const data = await res.json();
-        if (res.ok) {
-          setCompany(data);
-          setForm({
-            name: data.name || "",
-            address: data.address || "",
-            about: data.about || "",
-            website_url: data.website_url || "",
-            logo_url: data.logo_url || "",
-          });
-        }
       } catch (err) {
         console.error(err);
       }
     };
     fetchProfile();
-  }, [token]);
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -39,25 +33,13 @@ const CompanyProfile = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/companies/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setCompany(data.company);
-        setEditMode(false);
-        alert("✅ Profile updated!");
-      } else {
-        alert(data.message || "Update failed");
-      }
+      const data = await companyAPI.updateProfile(form);
+      setCompany(data.company);
+      setEditMode(false);
+      alert("✅ Profile updated!");
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      alert(err.message || "Update failed");
     }
   };
 

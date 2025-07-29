@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../user/Navbar";
+import { authAPI } from "../../utils/api";
 
 const CompanyRegister = () => {
   const navigate = useNavigate();
@@ -21,26 +22,16 @@ const CompanyRegister = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/companies/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok) {
-  // backend should return a token (update backend registerCompany to also generate token like login)
-  if (data.token) {
-    localStorage.setItem("token", data.token);
-  }
-  alert("✅ Company registered successfully!");
-  navigate("/company-dashboard");
-}
- else {
-        alert(data.message || "Registration failed");
+      const data = await authAPI.companyRegister(form);
+      // backend should return a token (update backend registerCompany to also generate token like login)
+      if (data.token) {
+        localStorage.setItem("token", data.token);
       }
+      alert("✅ Company registered successfully!");
+      navigate("/company-dashboard");
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      alert(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }

@@ -1,24 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Home, BookOpen, BarChart3, HelpCircle, LogOut, User, Menu, X
+  Home, BookOpen, BarChart3, HelpCircle, LogOut, User, Menu, X,SquarePen 
 } from "lucide-react";
+import api from "../../utils/api";
 
 // Import sub-components
-import DashboardHome from "./DashboardHome";
+import DashboardHome from "./UserHome";
 import Exams from "./Exams";
 import Results from "./Results";
 import Profile from "./Profile";
+import UserCreateTest from "./UserCreateTest";
 import Help from "./Help";
+import toast from "react-hot-toast";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  // Initialize activeTab from localStorage or default to "dashboard"
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("userActiveTab") || "dashboard";
+  });
+  const [user, setUser] = useState(null);
+
+  // Save activeTab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("userActiveTab", activeTab);
+  }, [activeTab]);
+
+  // Fetch user profile on mount
+ useEffect(() => {
+  const fetchUserProfile = async () => {
+    try {
+      const data = await api.get("/users/profile"); // ✅ already JSON
+      setUser(data); // ✅ directly use it
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Failed to load profile");
+    }
+  };
+  fetchUserProfile();
+}, []);
+
 
   const menuItems = [
     { id: "dashboard", icon: <Home className="w-5 h-5" />, label: "Dashboard" },
     { id: "exams", icon: <BookOpen className="w-5 h-5" />, label: "My Exams" },
+    { id: "create-test", icon: <SquarePen className="w-5 h-5"  />, label: "Create Test" },
+
     { id: "results", icon: <BarChart3 className="w-5 h-5" />, label: "Results" },
     { id: "profile", icon: <User className="w-5 h-5" />, label: "Profile" },
     { id: "help", icon: <HelpCircle className="w-5 h-5" />, label: "Help" },
@@ -26,8 +55,10 @@ const UserDashboard = () => {
 
   const renderMainContent = () => {
     switch (activeTab) {
-      case "dashboard": return <DashboardHome />;
+      case "dashboard": return <DashboardHome user={user} />;
       case "exams": return <Exams />;
+      case "create-test": return <UserCreateTest />;
+
       case "results": return <Results />;
       case "profile": return <Profile />;
       case "help": return <Help />;
@@ -44,8 +75,12 @@ const UserDashboard = () => {
       >
         <div className="p-6 border-b flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold text-indigo-600">Competency</h1>
-            <p className="text-sm text-gray-500">User Panel</p>
+            <h1 className="text-xl font-bold text-indigo-600">
+              {user ? `Welcome, ${user.name}` : "Loading…"}
+            </h1>
+            {user && (
+              <p className="text-sm text-gray-500 truncate">{user.email}</p>
+            )}
           </div>
           <button className="md:hidden text-gray-600" onClick={() => setSidebarOpen(false)}>
             <X className="w-6 h-6" />
@@ -59,7 +94,7 @@ const UserDashboard = () => {
                 setActiveTab(item.id);
                 if (window.innerWidth < 768) setSidebarOpen(false);
               }}
-              className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-left ${
+              className={`w-full flex items-center cursor-pointer space-x-2 px-4 py-2 rounded-lg text-left transition-all ${
                 activeTab === item.id
                   ? "bg-indigo-600 text-white"
                   : "text-gray-700 hover:bg-indigo-50"

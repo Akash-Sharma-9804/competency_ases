@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
+import { authAPI } from "../../utils/api";
 
 const UserSignup = () => {
   const navigate = useNavigate();
@@ -15,21 +16,12 @@ const UserSignup = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert("✅ User registered successfully! Please login.");
-        navigate("/"); // go back to login page
-      } else {
-        alert(data.message || "Registration failed");
-      }
+      await authAPI.userRegister(form);
+      alert("✅ User registered successfully! Please login.");
+      navigate("/"); // go back to login page
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      alert(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }

@@ -1,23 +1,20 @@
 import React, { useEffect, useState } from "react";
+import { companyAPI } from "../../utils/api";
 
 const CompanyHome = () => {
   const [stats, setStats] = useState({ totalTests: 0, totalCandidates: 0, completedTests: 0 });
-  const token = localStorage.getItem("token");
 
- useEffect(() => {
-  const fetchStats = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/companies/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) setStats(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  fetchStats();
-}, []);
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await companyAPI.getStats();
+        setStats(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchStats();
+  }, []);
 
 
   return (

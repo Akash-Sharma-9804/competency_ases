@@ -9,7 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // ✅ User Dashboard
 import UserDashboard from "./components/user/UserDashboard";
-import UserDetails from "./components/user/UserDetails";
+// import UserDetails from "./components/user/UserDetails";
 import UserSignup from "./components/user/UserSignup";
 
 // ✅ Company Dashboard
@@ -40,14 +40,14 @@ function App() {
       </ProtectedRoute>
     }
   />
-  <Route
+  {/* <Route
     path="/user-details"
     element={
       <ProtectedRoute allowedRole="user">
         <UserDetails />
       </ProtectedRoute>
     }
-  />
+  /> */}
 
   {/* 🏢 Company dashboard protected */}
   <Route

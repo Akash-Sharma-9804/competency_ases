@@ -20,7 +20,7 @@ const CompanyResults = () => {
           </thead>
           <tbody>
             {results.map((r) => (
-              <tr key={r.id} className="border-b hover:bg-gray-50">
+              <tr key={r.id} className="border-b hover:bg-gray-50"> 
                 <td className="py-2 px-4">{r.candidate}</td>
                 <td className="py-2 px-4">{r.test}</td>
                 <td className="py-2 px-4 font-semibold">{r.score}</td>
