@@ -8,9 +8,11 @@ const Homepage = () => {
   const [loginType, setLoginType] = useState("user"); // "user" or "company
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const credentials = loginType === "company"
         ? { email, contact_email: email, password } // backend expects contact_email for companies
@@ -26,13 +28,15 @@ const Homepage = () => {
       }
       
       if (loginType === "user") {
-        navigate("/user-dashboard");
+        navigate("/user-dashboard/");
       } else {
-        navigate("/company-dashboard");
+        navigate("/company-dashboard/");
       }
     } catch (err) {
       console.error(err);
       alert(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,9 +46,9 @@ useEffect(() => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
   if (token && role === "user") {
-    navigate("/user-dashboard");
+    navigate("/user-dashboard/");
   } else if (token && role === "company") {
-    navigate("/company-dashboard");
+    navigate("/company-dashboard/");
   }
 }, []);
 
@@ -150,9 +154,20 @@ useEffect(() => {
 
                 <button
                   type="submit"
-                  className="block w-full cursor-pointer bg-indigo-600  hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-transform transform hover:scale-[1.02] duration-300 shadow-md text-center"
+                  disabled={loading}
+                  className="block w-full cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-transform transform hover:scale-[1.02] duration-300 shadow-md text-center flex items-center justify-center"
                 >
-                  Login
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Logging in...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
                 </button>
               </form>
               {loginType === "user" && (

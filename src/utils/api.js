@@ -20,6 +20,10 @@ apiClient.interceptors.request.use(
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Request URL:', config.url);
+      console.log('Authorization header set:', config.headers.Authorization ? 'Yes' : 'No');
+    } else {
+      console.log('No token found for request:', config.url);
     }
     return config;
   },
@@ -141,9 +145,16 @@ export const testAPI = {
   // Get all tests
   getTests: () => handleApiRequest(() => apiClient.get("/tests")),
 
+  startTest: (data) =>
+  handleApiRequest(() => apiClient.post("/tests/start-test", data)),
+
   // Get single test
   getTest: (testId) =>
     handleApiRequest(() => apiClient.get(`/tests/${testId}`)),
+
+  // Get full test data (for started test, for users)
+getStartedTestData: (testId) =>
+  handleApiRequest(() => apiClient.get(`/tests/${testId}/start-data`)),
 
   // Create test
   createTest: (testData) =>

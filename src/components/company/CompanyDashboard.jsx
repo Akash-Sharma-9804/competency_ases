@@ -1,40 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, NavLink, Routes, Route, useLocation } from "react-router-dom";
 import {
-  Home,
-  FilePlus,
-  BarChart3,
-  Users,
-  User,
-  HelpCircle,
-  LogOut,
-  Menu,
-  X,
+  Home, FilePlus, BarChart3, Users, User, HelpCircle, LogOut, Menu, X
 } from "lucide-react";
 
 import CompanyHome from "./CompanyHome";
 import ManageTests from "./ManageTests";
 import CompanyResults from "./CompanyResults";
-import Candidates from "./Candidates";
+import CandidatesList from "./CandidatesList";
 import CompanyProfile from "./CompanyProfile";
 import CompanyHelp from "./CompanyHelp";
 import AssignedTests from "./AssignedTests";
+import CandidateProfile from "./CandidateProfile"; // make sure this import exists
 
 const CompanyDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [company, setCompany] = useState(null);
-  // Initialize activeTab from localStorage or default to "dashboard"
-  const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("companyActiveTab") || "dashboard";
-  });
 
-  // Save activeTab to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("companyActiveTab", activeTab);
-  }, [activeTab]);
-
-  // Fetch company profile on mount
   useEffect(() => {
     const fetchCompanyProfile = async () => {
       try {
@@ -46,9 +30,7 @@ const CompanyDashboard = () => {
           }
         );
         const data = await res.json();
-        if (res.ok) {
-          setCompany(data);
-        }
+        if (res.ok) setCompany(data);
       } catch (err) {
         console.error("Error fetching company profile:", err);
       }
@@ -57,56 +39,21 @@ const CompanyDashboard = () => {
   }, []);
 
   const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: <Home className="w-5 h-5" /> },
-    {
-      id: "tests",
-      label: "Manage Tests",
-      icon: <FilePlus className="w-5 h-5" />,
-    },
-     { id: "assigned", label: "Assigned Tests", icon: <BarChart3 className="w-5 h-5" /> }, // ✅ Added
-    {
-      id: "results",
-      label: "Results",
-      icon: <BarChart3 className="w-5 h-5" />,
-    },
-    {
-      id: "candidates",
-      label: "Candidates",
-      icon: <Users className="w-5 h-5" />,
-    },
+    { id: "", label: "Dashboard", icon: <Home className="w-5 h-5" /> },
+    { id: "tests", label: "Manage Tests", icon: <FilePlus className="w-5 h-5" /> },
+    { id: "assigned", label: "Assigned Tests", icon: <BarChart3 className="w-5 h-5" /> },
+    { id: "results", label: "Results", icon: <BarChart3 className="w-5 h-5" /> },
+    { id: "candidates", label: "Candidates", icon: <Users className="w-5 h-5" /> },
     { id: "profile", label: "Profile", icon: <User className="w-5 h-5" /> },
     { id: "help", label: "Help", icon: <HelpCircle className="w-5 h-5" /> },
   ];
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return <CompanyHome />;
-      case "tests":
-        return <ManageTests />;
-      case "assigned": // ✅ changed to match menuItems id
-        return <AssignedTests />;
-      case "results":
-        return <CompanyResults />;
-      case "candidates":
-        return <Candidates />;
-      case "profile":
-        return <CompanyProfile />;
-      case "help":
-        return <CompanyHelp />;
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
       <aside
         className={`fixed md:static inset-y-0 left-0 z-30 bg-white shadow-md transform md:translate-x-0 transition-transform duration-200 ease-in-out 
-        ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } w-64  md:w-40 lg:w-64 flex flex-col`}>
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-64 md:w-40 lg:w-64 flex flex-col`}>
         <div className="p-6 border-b flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold text-indigo-600">
@@ -114,37 +61,35 @@ const CompanyDashboard = () => {
             </h1>
             <p className="text-sm text-gray-500">Manage Tests</p>
           </div>
-          <button
-            className="md:hidden text-gray-600"
-            onClick={() => setSidebarOpen(false)}>
+          <button className="md:hidden text-gray-600" onClick={() => setSidebarOpen(false)}>
             <X className="w-6 h-6" />
           </button>
         </div>
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => (
-            <button
+            <NavLink
               key={item.id}
-              onClick={() => {
-                setActiveTab(item.id);
-                if (window.innerWidth < 768) setSidebarOpen(false);
-              }}
-              className={`w-full cursor-pointer flex items-center space-x-2 px-4 py-2 rounded-lg text-left transition ${
-                activeTab === item.id
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-                  : "text-gray-700 hover:bg-indigo-50"
-              }`}>
+              to={`/company-dashboard/${item.id}`}
+              end={item.id === ""}
+              className={({ isActive }) =>
+                `w-full flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                  isActive
+                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow"
+                    : "text-gray-700 hover:bg-indigo-50"
+                }`
+              }>
               {item.icon}
               <span>{item.label}</span>
-            </button>
+            </NavLink>
           ))}
         </nav>
         <div className="p-4 border-t">
           <button
             onClick={() => {
-              localStorage.removeItem("token");
-              navigate("/", { replace: true }); // replace to prevent back navigation
+              localStorage.clear();
+              navigate("/", { replace: true });
             }}
-            className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-red-50 text-red-600 font-medium">
+            className="w-full flex cursor-pointer items-center space-x-2 px-4 py-2 rounded-lg hover:bg-red-50 text-red-600 font-medium">
             <LogOut className="w-5 h-5" />
             <span>Logout</span>
           </button>
@@ -159,7 +104,18 @@ const CompanyDashboard = () => {
             <Menu className="w-6 h-6 text-gray-700" />
           </button>
         </header>
-        <main className="p-6 flex-1 overflow-y-auto">{renderContent()}</main>
+        <main className="pt-0 px-6 pb-6 flex-1 overflow-y-auto">
+          <Routes>
+            <Route path="/" element={<CompanyHome />} />
+            <Route path="tests" element={<ManageTests />} />
+            <Route path="assigned" element={<AssignedTests />} />
+            <Route path="results" element={<CompanyResults />} />
+            <Route path="candidates" element={<CandidatesList />} />
+            <Route path="candidate/:id" element={<CandidateProfile />} /> {/* ✅ Added this */}
+            <Route path="profile" element={<CompanyProfile />} />
+            <Route path="help" element={<CompanyHelp />} />
+          </Routes>
+        </main>
       </div>
     </div>
   );

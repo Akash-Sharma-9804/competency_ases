@@ -128,236 +128,225 @@ const Spinner = () => (
 
   if (!profile) return <div className="text-center p-6">Loading...</div>;
 
-  return (
-    <div className="bg-white rounded-xl shadow-sm p-6 space-y-8">
-      {!editMode ? (
-        <>
-          {/* Top section */}
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-6">
-            <div className="flex-shrink-0 self-center mb-4 md:mb-0">
-              <img
-                src={
-                  profile.photo_path ||
-                  "https://ui-avatars.com/api/?name=User&background=4f46e5&color=fff&size=128"
-                }
-                alt="Profile"
-                className="w-32 h-32 rounded-full border-4 border-indigo-500 object-cover shadow"
-              />
-            </div>
-
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                👤 Your Profile
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-                <p>
-                  <span className="font-medium">Name:</span> {profile.name}
-                </p>
-                <p>
-                  <span className="font-medium">Email:</span> {profile.email}
-                </p>
-                <p>
-                  <span className="font-medium">Company:</span>{" "}
-                  {profile.company?.name || profile.company || "N/A"}
-                </p>
-                <p>
-                  <span className="font-medium">Age:</span> {profile.age || "—"}
-                </p>
-                <p>
-                  <span className="font-medium">Gender:</span>{" "}
-                  {profile.gender || "—"}
-                </p>
-              </div>
-              <div className="mt-6">
-                <button
-                  onClick={() => setEditMode(true)}
-                  className="px-5 py-3 bg-indigo-600 cursor-pointer text-white rounded-lg hover:bg-indigo-700 font-medium transition">
-                  ✏️ Edit Profile
-                </button>
-              </div>
-            </div>
+return (
+  <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-xl p-4 sm:p-6 md:p-8 max-w-4xl mx-auto my-12 font-sans transition-all duration-300">
+    {!editMode ? (
+      <>
+        {/* Top Section */}
+        <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+          <div className="flex-shrink-0 mx-auto sm:mx-0 relative group">
+            <img
+              src={
+                profile.photo_path ||
+                "https://ui-avatars.com/api/?name=User&background=0ea5e9&color=fff&size=128"
+              }
+              alt="Profile"
+              className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-4 border-sky-400 object-cover shadow-lg group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="absolute inset-0 rounded-full bg-sky-400 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
           </div>
 
-          {/* Bio */}
-          <div>
-            <h4 className="text-lg font-semibold text-gray-800 mb-2">
-              📝 About Me
-            </h4>
-            <p className="text-gray-700 bg-gray-50 p-4 rounded-lg leading-relaxed">
-              {profile.bio || "No description provided."}
-            </p>
+          <div className="flex-1 text-center sm:text-left">
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-indigo-600">
+              Your Profile
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 text-sm sm:text-base">
+              <p className="flex items-center gap-2">
+                <span className="font-semibold text-gray-800">Name:</span> 
+                <span className="truncate">{profile.name}</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="font-semibold text-gray-800">Email:</span> 
+                <span className="truncate">{profile.email}</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="font-semibold text-gray-800">Company:</span> 
+                <span className="truncate">{profile.company?.name || profile.company || "N/A"}</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="font-semibold text-gray-800">Age:</span> 
+                {profile.age || "—"}
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="font-semibold text-gray-800">Gender:</span> 
+                {profile.gender || "—"}
+              </p>
+            </div>
+            <button
+              onClick={() => setEditMode(true)}
+              className="mt-6 px-6 py-2.5 cursor-pointer bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-full hover:from-sky-600 hover:to-indigo-600 font-medium transition-all duration-300 shadow-md hover:shadow-lg text-sm sm:text-base"
+            >
+              Edit Profile
+            </button>
           </div>
-          {profile.resumeUrl && (
-            <div className="mt-8">
-              <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                📄 Resume
-              </h4>
-              <div
-                onClick={() => setShowResume((prev) => !prev)}
-                className="flex items-center cursor-pointer gap-3 bg-gray-100 px-4 py-3 rounded-lg border hover:bg-gray-200 transition">
-                <FileText className="text-indigo-600" />
-                <span className="text-indigo-700 font-medium underline">
-                  {decodeURIComponent(profile.resumeUrl.split("/").pop())}
-                </span>
-                <span className="ml-auto text-sm text-gray-500">
-                  {showResume ? "▲ Hide" : "▼ View"}
-                </span>
-              </div>
+        </div>
 
-              {showResume && (
-                <div className="mt-4">
-                  <iframe
-                    src={profile.resumeUrl}
-                    title="Resume"
-                    className="w-full h-[600px] rounded-lg border shadow"
-                  />
-                </div>
-              )}
+        {/* Bio */}
+        <div className="mt-8">
+          <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">About Me</h4>
+          <p className="text-gray-600 bg-white p-4 sm:p-6 rounded-xl shadow-sm text-sm sm:text-base leading-relaxed border border-gray-100">
+            {profile.bio || "No description provided."}
+          </p>
+        </div>
+
+        {/* Resume */}
+        {profile.resumeUrl && (
+          <div className="mt-8">
+            <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">Resume</h4>
+            <div
+              onClick={() => setShowResume((prev) => !prev)}
+              className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl hover:bg-gray-50 transition-all cursor-pointer text-sm sm:text-base border border-gray-100 shadow-sm hover:shadow-md"
+            >
+              <FileText className="text-sky-500 w-5 h-5" />
+              <span className="text-sky-600 font-medium truncate">
+                {decodeURIComponent(profile.resumeUrl.split("/").pop())}
+              </span>
+              <span className="ml-auto text-xs text-gray-500 font-medium">
+                {showResume ? "Hide ▲" : "View ▼"}
+              </span>
             </div>
-          )}
-        </>
-      ) : (
-        <>
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">
-            ✏️ Edit Profile
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Name
-              </label>
-              <input
-                name="name"
-                value={profile.name || ""}
-                onChange={handleChange}
-                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                name="email"
-                value={profile.email || ""}
-                onChange={handleChange}
-                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400"
-              />
-            </div>
-
-            {/* Age */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Age
-              </label>
-              <input
-                name="age"
-                type="number"
-                value={profile.age || ""}
-                onChange={handleChange}
-                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400"
-              />
-            </div>
-
-            {/* Gender */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Gender
-              </label>
-              <select
-                name="gender"
-                value={profile.gender || ""}
-                onChange={handleChange}
-                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400">
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            {/* Upload Resume */}
-            <div className="mt-4 col-span-1 sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Upload Resume
-              </label>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) => handleResumeUpload(e.target.files[0])}
-                disabled={uploadingResume}
-                className="mt-1 block w-full text-sm text-gray-500 file:border file:border-gray-300 file:px-3 file:py-1 file:bg-white file:rounded-lg"
-              />
-             {uploadingResume && <Spinner />}
-
-            </div>
-
-            {/* Upload Photo */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Upload Profile Photo
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handlePhotoUpload(e.target.files[0])}
-                disabled={uploadingPhoto}
-                className="block w-full text-sm text-gray-500 file:border file:border-gray-300 file:px-3 file:py-1 file:bg-white file:rounded-lg"
-              />
-            {uploadingPhoto && <Spinner />}
-
-
-            </div>
-
-            {/* Show Profile Photo Preview */}
-            {profile.photo_path && (
-              <div className="mt-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Photo
-                </label>
-                <img
-                  src={profile.photo_path}
-                  alt="Current"
-                  className="w-24 h-24 rounded-full border-2 border-indigo-500 object-cover"
+            {showResume && (
+              <div className="mt-4">
+                <iframe
+                  src={profile.resumeUrl}
+                  title="Resume"
+                  className="w-full h-[400px] sm:h-[600px] rounded-xl border border-gray-100 shadow-sm"
                 />
               </div>
             )}
           </div>
-
-          {/* Bio */}
+        )}
+      </>
+    ) : (
+      <>
+        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-indigo-600">
+          Edit Profile
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mt-4">
-              Bio
-            </label>
-            <textarea
-              name="bio"
-              value={profile.bio || ""}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input
+              name="name"
+              value={profile.name || ""}
               onChange={handleChange}
-              rows={4}
-              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-all duration-200 bg-white shadow-sm"
+              placeholder="Enter your name"
             />
           </div>
 
-          {/* Save/Cancel Buttons */}
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-green-600 cursor-pointer text-white rounded-lg hover:bg-green-700">
-              Save
-            </button>
-            <button
-              onClick={() => setEditMode(false)}
-              className="px-4 py-2 bg-gray-200 cursor-pointer text-gray-700 rounded-lg hover:bg-gray-300">
-              Cancel
-            </button>
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              name="email"
+              value={profile.email || ""}
+              onChange={handleChange}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-all duration-200 bg-white shadow-sm"
+              placeholder="Enter your email"
+            />
           </div>
-        </>
-      )}
-    </div>
-  );
+
+          {/* Age */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+            <input
+              name="age"
+              type="number"
+              value={profile.age || ""}
+              onChange={handleChange}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-all duration-200 bg-white shadow-sm"
+              placeholder="Enter your age"
+            />
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+            <select
+              name="gender"
+              value={profile.gender || ""}
+              onChange={handleChange}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-all duration-200 bg-white shadow-sm"
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {/* Upload Resume */}
+          <div className="col-span-1 sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Upload Resume</label>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => handleResumeUpload(e.target.files[0])}
+              disabled={uploadingResume}
+              className="block w-full text-sm text-gray-500 file:border file:border-gray-200 file:px-4 file:py-2 file:bg-white file:rounded-xl file:cursor-pointer file:transition-all file:hover:bg-gray-50"
+            />
+            {uploadingResume && <Spinner />}
+          </div>
+
+          {/* Upload Photo */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Upload Profile Photo</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handlePhotoUpload(e.target.files[0])}
+              disabled={uploadingPhoto}
+              className="block w-full text-sm text-gray-500 file:border file:border-gray-200 file:px-4 file:py-2 file:bg-white file:rounded-xl file:cursor-pointer file:transition-all file:hover:bg-gray-50"
+            />
+            {uploadingPhoto && <Spinner />}
+          </div>
+
+          {/* Profile Photo Preview */}
+          {profile.photo_path && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Current Photo</label>
+              <img
+                src={profile.photo_path}
+                alt="Current"
+                className="mt-2 w-24 h-24 rounded-full border-2 border-sky-400 object-cover shadow-sm"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Bio */}
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+          <textarea
+            name="bio"
+            value={profile.bio || ""}
+            onChange={handleChange}
+            rows={4}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-all duration-200 bg-white shadow-sm"
+            placeholder="Tell us about yourself"
+          />
+        </div>
+
+        {/* Save/Cancel Buttons */}
+        <div className="flex gap-3 mt-6 justify-end">
+          <button
+            onClick={() => setEditMode(false)}
+            className="px-6 py-2.5 cursor-pointer bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-all duration-200 text-sm shadow-sm"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-6 py-2.5 cursor-pointer bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-full hover:from-sky-600 hover:to-indigo-600 transition-all duration-200 text-sm shadow-sm hover:shadow-md"
+          >
+            Save
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+);
 };
 
 export default Profile;
