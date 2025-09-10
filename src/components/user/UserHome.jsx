@@ -24,14 +24,19 @@ import {
   Coffee,
   Brain
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate} from "react-router-dom";
+import { useDispatch } from "react-redux";
 import "../common/animations.css";
+
 const UserHome = () => {
   const [assignedTests, setAssignedTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState("");
 const navigate = useNavigate();
+ const dispatch = useDispatch();
+
+
   // Mock user stats - replace with backend data later
   const [userStats] = useState({
     testsCompleted: 12,
@@ -61,11 +66,11 @@ const navigate = useNavigate();
   const handleStartTest = async (test_id, user_id) => {
     try {
       const response = await testAPI.startTest({ test_id });
-      // dispatch(setTestData({ testId: test_id, userId: user_id }));
+      dispatch(setTestData({ testId: test_id, userId: user_id }));
       localStorage.setItem("testId", test_id);
       localStorage.setItem("userId", user_id);
       navigate("/instructions");
-      console.log("Navigating to instructions...");
+      // console.log("Navigating to instructions...");
     } catch (error) {
       console.error("Start test failed:", error);
       // toast.error(error.message || "Unable to start test.");

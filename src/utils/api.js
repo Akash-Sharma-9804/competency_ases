@@ -209,6 +209,14 @@ export const fileAPI = {
   },
 };
 
+// sector api 
+// ==================== SECTOR APIs ====================
+
+export const sectorAPI = {
+  // Get all sectors
+  getSectors: () => handleApiRequest(() => apiClient.get("/sectors")),
+};
+
 // ==================== LEGACY CRUD METHODS (for backward compatibility) ====================
 
 export const api = {

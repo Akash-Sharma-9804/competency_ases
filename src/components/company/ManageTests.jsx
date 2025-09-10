@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Lottie from "lottie-react";
-import { testAPI, userAPI, fileAPI } from "../../utils/api";
+import { testAPI, userAPI, fileAPI , sectorAPI} from "../../utils/api";
 // import magicLoading from "../assets/magic-loading.json";
 import { motion, AnimatePresence } from "framer-motion";
- 
+ import axios from "axios"; // Make sure this is imported at the top
  import ViewTest from "../common/ViewTest";
 
-const sectors = [
-  "IT",
-  "Education",
-  "Healthcare",
-  "Finance",
-  "Retail",
-  "Manufacturing",
-];
+// const sectors = [
+//   "IT",
+//   "Education",
+//   "Healthcare",
+//   "Finance",
+//   "Retail",
+//   "Manufacturing",
+// ];
 
 const ManageTests = () => {
   const [showCreateTest, setShowCreateTest] = useState(false);
@@ -25,6 +25,9 @@ const ManageTests = () => {
     description: "",
     duration: 60,
   });
+
+  const [sectors, setSectors] = useState([]);
+
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [tests, setTests] = useState([]);
@@ -65,29 +68,165 @@ const filteredQuestions = viewQuestions.filter((q) =>
 
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedScheduleTestId, setSelectedScheduleTestId] = useState(null);
-  const [scheduleStart, setScheduleStart] = useState("");
-  const [scheduleEnd, setScheduleEnd] = useState("");
+ const [scheduleStart, setScheduleStart] = useState("");
+const [scheduleEnd, setScheduleEnd] = useState("");
+const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata");
 
-  const openScheduleModal = (testId) => {
-    setSelectedScheduleTestId(testId);
-    setShowScheduleModal(true);
-  };
 
-  const handleScheduleSave = async () => {
-    if (!scheduleStart || !scheduleEnd) return alert("Select start & end time");
-    try {
-      await testAPI.updateSchedule(selectedScheduleTestId, {
-        startDateTime: scheduleStart,
-        endDateTime: scheduleEnd,
-      });
-      toast.success("✅ Schedule updated!");
-      setShowScheduleModal(false);
-      fetchTests(); // refresh table
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "Failed to update schedule");
-    }
-  };
+
+// Add these state variables and functions to your component:
+const [searchTerm, setSearchTerm] = useState("");
+
+// Filter candidates based on search term
+const filteredCandidates = candidates.filter(candidate => 
+  candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  candidate.email.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+  
+// Timezone options WITHOUT hardcoded offsets
+const timezones = [
+  { value: 'Asia/Kolkata', label: 'India (IST)' },
+  { value: 'Asia/Kuwait', label: 'Kuwait (AST)' },
+  { value: 'Asia/Dubai', label: 'UAE (GST)' },
+  { value: 'Asia/Qatar', label: 'Qatar (AST)' },
+  { value: 'Asia/Riyadh', label: 'Saudi Arabia (AST)' },
+  { value: 'Asia/Bahrain', label: 'Bahrain (AST)' },
+  { value: 'Asia/Singapore', label: 'Singapore (SGT)' },
+  { value: 'Asia/Hong_Kong', label: 'Hong Kong (HKT)' },
+  { value: 'Europe/London', label: 'London (GMT/BST)' },
+  { value: 'America/New_York', label: 'New York (EST/EDT)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEDT/AEST)' }
+];
+useEffect(() => {
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  setTimezone(userTimeZone);
+}, []);
+
+
+
+const getCurrentTime = (timezoneValue) => {
+  try {
+    const now = new Date();
+    return now.toLocaleTimeString('en-US', {
+      timeZone: timezoneValue,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch (error) {
+    console.error("Error getting current time:", error);
+    return '';
+  }
+};
+
+// Function to get current offset for a timezone (handles DST automatically)
+const getCurrentOffset = (timezoneValue) => {
+  try {
+    const now = new Date();
+    const options = {
+      timeZone: timezoneValue,
+      timeZoneName: 'short'
+    };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(now);
+    const tzPart = parts.find(part => part.type === 'timeZoneName');
+    return tzPart ? tzPart.value : '';
+  } catch (error) {
+    console.error("Error getting offset:", error);
+    return '';
+  }
+};
+
+useEffect(() => {
+  sectorAPI.getSectors()
+    .then(data => {
+      console.log("Fetched sectors:", data);
+      setSectors(data); // Assuming data is an array of objects
+    })
+    .catch(error => {
+      console.error("Error fetching sectors:", error);
+    });
+}, []);
+
+
+ // Updated functions
+const openScheduleModal = (testId) => {
+  setSelectedScheduleTestId(testId);
+  setScheduleStart("");
+  setScheduleEnd("");
+  setTimezone("Asia/Kolkata");
+  setShowScheduleModal(true);
+};
+
+const handleScheduleSave = async () => {
+  if (!scheduleStart || !scheduleEnd) {
+    return toast.error("Please select both start and end time");
+  }
+
+  if (new Date(scheduleEnd) <= new Date(scheduleStart)) {
+    return toast.error("End time must be after start time");
+  }
+
+  try {
+    await testAPI.updateSchedule(selectedScheduleTestId, {
+      startDateTime: scheduleStart,
+      endDateTime: scheduleEnd,
+      timezone: timezone
+    });
+    toast.success("✅ Schedule updated successfully!");
+    setShowScheduleModal(false);
+    fetchTests();
+  } catch (err) {
+    console.error(err);
+    toast.error(err.message || "Failed to update schedule");
+  }
+};
+
+const formatDateTime = (dateTimeString) => {
+  if (!dateTimeString) return '';
+  try {
+    const date = new Date(dateTimeString);
+    return date.toLocaleString('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return dateTimeString;
+  }
+};
+
+
+const formatScheduleDateTime = (dateString, timezone) => {
+  if (!dateString) return "Not set";
+  
+  try {
+    const date = new Date(dateString);
+    const options = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: timezone || 'UTC'
+    };
+    
+    const formattedDate = date.toLocaleString('en-US', options);
+    const timezoneName = timezone ? timezone.split('/').pop().replace('_', ' ') : 'UTC';
+    
+    return `${formattedDate} (${timezoneName})`;
+  } catch (error) {
+    return new Date(dateString).toLocaleString();
+  }
+};
+
 
   const toggleCandidate = (id) => {
     setSelectedCandidateIds((prev) =>
@@ -111,7 +250,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       setQuestions(data.questions || []);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to generate questions");
+      toast.error(err.message || "Failed to generate questions");
     } finally {
       setLoading(false);
     }
@@ -119,7 +258,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
 
   const handleUploadFiles = async () => {
     if (files.length === 0) {
-      alert("Please select files first!");
+      toast.error("Please select files first!");
       return;
     }
     setUploading(true);
@@ -137,7 +276,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       setFiles([]); // clear local selection
     } catch (err) {
       console.error("❌ File upload error:", err);
-      alert(err.message || "File upload failed");
+      toast.error(err.message || "File upload failed");
     } finally {
       setUploading(false);
     }
@@ -150,7 +289,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       setShowCreateTest(false);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to save test");
+      toast.error(err.message || "Failed to save test");
     }
   };
 
@@ -162,7 +301,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       setTests(data);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to load tests");
+      toast.error(err.message || "Failed to load tests");
     } finally {
       setLoadingTests(false);
     }
@@ -188,7 +327,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       setShowEditTest(true);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to load test");
+      toast.error(err.message || "Failed to load test");
     }
   };
   const handleEditChange = (e) =>
@@ -202,7 +341,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       fetchTests();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to update");
+      toast.error(err.message || "Failed to update");
     }
   };
 
@@ -217,7 +356,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
         setShowViewTest(true);
       } catch (err) {
         console.error(err);
-        alert(err.message || "Failed to view");
+        toast.error(err.message || "Failed to view");
       }
     };
   // -------- ASSIGN TEST FUNCTIONS --------
@@ -229,12 +368,12 @@ const filteredQuestions = viewQuestions.filter((q) =>
       setCandidates(data);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to load candidates");
+      toast.error(err.message || "Failed to load candidates");
     }
   };
   const handleAssign = async () => {
     if (selectedCandidateIds.length === 0)
-      return alert("Select at least one candidate");
+      return toast.error("Select at least one candidate");
 
     try {
       await testAPI.assignTest(selectedTestId, selectedCandidateIds);
@@ -242,7 +381,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       setShowAssignModal(false);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to assign");
+      toast.error(err.message || "Failed to assign");
     }
   };
 
@@ -255,7 +394,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       fetchTests();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to delete");
+      toast.error(err.message || "Failed to delete");
     }
   };
 
@@ -313,19 +452,21 @@ const filteredQuestions = viewQuestions.filter((q) =>
             />
 
             {/* Sector */}
-            <label className="text-sm font-medium text-gray-600">Sector</label>
-            <select
-              name="sector"
-              value={form.sector}
-              onChange={handleFormChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-              <option value="">Select Sector</option>
-              {sectors.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+           <label className="text-sm font-medium text-gray-600">Sector</label>
+<select
+  name="sector"
+  value={form.sector}
+  onChange={handleFormChange}
+  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+>
+  <option value="">Select Sector</option>
+  {sectors.map((s) => (
+    <option key={s.sector_id} value={s.sector_id}>
+      {s.name}
+    </option>
+  ))}
+</select>
+
 
             {/* Job Description */}
             <label className="text-sm font-medium text-gray-600">
@@ -1033,7 +1174,7 @@ const filteredQuestions = viewQuestions.filter((q) =>
       {/* TABLE / CARDS */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden ">
         {/* DESKTOP TABLE */}
-        <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
   <table className="hidden md:table min-w-full">
     <thead className="bg-gray-100">
       <tr>
@@ -1077,31 +1218,31 @@ const filteredQuestions = viewQuestions.filter((q) =>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => openScheduleModal(t.test_id)}
-                  className="bg-purple-500 cursor-pointer text-white px-3 py-1 rounded"
+                  className="bg-purple-500 cursor-pointer text-white px-3 py-1 rounded hover:bg-purple-600 transition-colors"
                 >
                   Set Schedule
                 </button>
                 <button
                   onClick={() => openEditTest(t.test_id)}
-                  className="bg-blue-500 cursor-pointer text-white px-3 py-1 rounded"
+                  className="bg-blue-500 cursor-pointer text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => openViewTest(t.test_id)}
-                  className="bg-yellow-500 cursor-pointer text-white px-3 py-1 rounded"
+                  className="bg-yellow-500 cursor-pointer text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors"
                 >
                   View
                 </button>
                 <button
                   onClick={() => openAssign(t.test_id)}
-                  className="bg-green-500 cursor-pointer text-white px-3 py-1 rounded"
+                  className="bg-green-500 cursor-pointer text-white px-3 py-1 rounded hover:bg-green-600 transition-colors"
                 >
                   Assign
                 </button>
                 <button
                   onClick={() => handleDelete(t.test_id)}
-                  className="bg-red-500 cursor-pointer text-white px-3 py-1 rounded"
+                  className="bg-red-500 cursor-pointer text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
                 >
                   Delete
                 </button>
@@ -1109,18 +1250,27 @@ const filteredQuestions = viewQuestions.filter((q) =>
             </td>
 
             {/* Schedule */}
-            <td className="py-4 px-6 font-poppins text-sm text-gray-700">
+            <td className="py-2 px-2 font-poppins text-xs">
               {t.scheduled_start ? (
-                <>
+                <div className="space-y-1">
                   <div>
-                    <span className="font-medium">Start:</span>{" "}
-                    {new Date(t.scheduled_start).toLocaleString()}
+                    <span className="font-medium text-green-600">Start:</span>
+                    <div className="text-xs text-gray-600 ml-1">
+                      {formatScheduleDateTime(t.scheduled_start, t.timezone)}
+                    </div>
                   </div>
                   <div>
-                    <span className="font-medium">End:</span>{" "}
-                    {new Date(t.scheduled_end).toLocaleString()}
+                    <span className="font-medium text-red-600">End:</span>
+                    <div className="text-xs text-gray-600 ml-1">
+                      {formatScheduleDateTime(t.scheduled_end, t.timezone)}
+                    </div>
                   </div>
-                </>
+                  {t.timezone && (
+                    <div className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded inline-block mt-1">
+                      {t.timezone}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <span className="italic text-gray-400">Not scheduled</span>
               )}
@@ -1134,147 +1284,478 @@ const filteredQuestions = viewQuestions.filter((q) =>
 
 
         {/* MOBILE / TABLET CARDS */}
-        <div className="md:hidden divide-y">
-          {loadingTests ? (
-            <div className="p-6 text-center text-gray-500">Loading...</div>
-          ) : tests.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">No tests found.</div>
-          ) : (
-            tests.map((t) => (
-              <div key={t.test_id} className="p-4">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {t.title}
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  <span className="font-medium text-gray-700">Role:</span>{" "}
-                  {t.job_role}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <span className="font-medium text-gray-700">Sector:</span>{" "}
-                  {t.job_sector}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <span className="font-medium text-gray-700">Status:</span>{" "}
-                  {t.status}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => openScheduleModal(t.test_id)}
-                    className="bg-purple-500 cursor-pointer text-white px-3 py-1 rounded">
-                    Set Schedule
-                  </button>
-                  <button
-                    onClick={() => openEditTest(t.test_id)}
-                    className="bg-blue-500  cursor-pointer text-white px-2 py-1 rounded">
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => openViewTest(t.test_id)}
-                    className="bg-yellow-500  cursor-pointer text-white px-2 py-1 rounded">
-                    View
-                  </button>
-                  <button
-                    onClick={() => openAssign(t.test_id)}
-                    className="bg-green-500  cursor-pointer text-white px-2 py-1 rounded">
-                    Assign
-                  </button>
-                  <button
-                    onClick={() => handleDelete(t.test_id)}
-                    className="bg-red-500  cursor-pointer text-white px-2 py-1 rounded">
-                    Delete
-                  </button>
-                 <p className="text-sm text-gray-500">
-  <span className="font-medium text-gray-700">Start:</span>{" "}
-  {t.scheduled_start ? new Date(t.scheduled_start).toLocaleString() : "Not set"}
-</p>
-<p className="text-sm text-gray-500">
-  <span className="font-medium text-gray-700">End:</span>{" "}
-  {t.scheduled_end ? new Date(t.scheduled_end).toLocaleString() : "Not set"}
-</p>
+     <div className="md:hidden divide-y">
+  {loadingTests ? (
+    <div className="p-6 text-center text-gray-500">Loading...</div>
+  ) : tests.length === 0 ? (
+    <div className="p-6 text-center text-gray-500">No tests found.</div>
+  ) : (
+    tests.map((t) => (
+      <div key={t.test_id} className="p-4 bg-white rounded-lg shadow-sm mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+          {t.title}
+        </h3>
+        
+        <div className="space-y-2 mb-4">
+          <p className="text-sm text-gray-500">
+            <span className="font-medium text-gray-700">Role:</span> {t.job_role}
+          </p>
+          <p className="text-sm text-gray-500">
+            <span className="font-medium text-gray-700">Sector:</span> {t.job_sector}
+          </p>
+          <p className="text-sm text-gray-500">
+            <span className="font-medium text-gray-700">Status:</span> {t.status}
+          </p>
+        </div>
 
-                </div>
+        {/* Schedule Info */}
+        <div className="bg-gray-50 p-3 rounded-lg mb-3">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Schedule:</h4>
+          {t.scheduled_start ? (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium text-green-600">Start:</span>
+                <br />
+                <span className="text-xs">{formatScheduleDateTime(t.scheduled_start, t.timezone)}</span>
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-medium text-red-600">End:</span>
+                <br />
+                <span className="text-xs">{formatScheduleDateTime(t.scheduled_end, t.timezone)}</span>
+              </p>
+              {t.timezone && (
+                <p className="text-xs text-blue-600 font-medium bg-blue-100 px-2 py-1 rounded inline-block">
+                  {t.timezone}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 italic">Not scheduled</p>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => openScheduleModal(t.test_id)}
+            className="bg-purple-500 cursor-pointer text-white px-3 py-1 rounded text-sm hover:bg-purple-600 transition-colors">
+            Set Schedule
+          </button>
+          <button
+            onClick={() => openEditTest(t.test_id)}
+            className="bg-blue-500 cursor-pointer text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors">
+            Edit
+          </button>
+          <button
+            onClick={() => openViewTest(t.test_id)}
+            className="bg-yellow-500 cursor-pointer text-white px-2 py-1 rounded text-sm hover:bg-yellow-600 transition-colors">
+            View
+          </button>
+          <button
+            onClick={() => openAssign(t.test_id)}
+            className="bg-green-500 cursor-pointer text-white px-2 py-1 rounded text-sm hover:bg-green-600 transition-colors">
+            Assign
+          </button>
+          <button
+            onClick={() => handleDelete(t.test_id)}
+            className="bg-red-500 cursor-pointer text-white px-2 py-1 rounded text-sm hover:bg-red-600 transition-colors">
+            Delete
+          </button>
+        </div>
+      </div>
+    ))
+  )}
+</div>
+
+      {showScheduleModal && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all duration-300">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-t-2xl text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">Schedule Test</h3>
+              <p className="text-purple-100 text-sm">Set test timing and timezone</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowScheduleModal(false)}
+            className="p-2 cursor-pointer hover:bg-white/20 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
+        {/* Timezone Selection */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9m0 9c-5 0-9-4-9-9s4-9 9-9" />
+            </svg>
+            Timezone
+          </label>
+          <select
+  value={timezone}
+  onChange={(e) => setTimezone(e.target.value)}
+  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+>
+  {timezones.map((tz) => (
+  <option key={tz.value} value={tz.value}>
+  {tz.label} ({getCurrentOffset(tz.value)}) – {getCurrentTime(tz.value)}
+</option>
+
+  ))}
+</select>
+
+        </div>
+
+        {/* Start Time */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Start Date & Time
+          </label>
+          <input
+            type="datetime-local"
+            value={scheduleStart}
+            onChange={(e) => setScheduleStart(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+          />
+          {scheduleStart && (
+            <p className="text-xs text-gray-500 ml-2">
+              Preview: {formatDateTime(scheduleStart)}
+            </p>
+          )}
+        </div>
+
+        {/* End Time */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            End Date & Time
+          </label>
+          <input
+            type="datetime-local"
+            value={scheduleEnd}
+            onChange={(e) => setScheduleEnd(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+          />
+          {scheduleEnd && (
+            <p className="text-xs text-gray-500 ml-2">
+              Preview: {formatDateTime(scheduleEnd)}
+            </p>
+          )}
+        </div>
+
+        {/* Duration Display */}
+        {scheduleStart && scheduleEnd && new Date(scheduleEnd) > new Date(scheduleStart) && (
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+            <div className="flex items-center gap-2 text-blue-700">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-medium">
+                Test Duration: {Math.round((new Date(scheduleEnd) - new Date(scheduleStart)) / (1000 * 60))} minutes
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {scheduleStart && scheduleEnd && new Date(scheduleEnd) <= new Date(scheduleStart) && (
+          <div className="bg-red-50 p-4 rounded-xl border border-red-200">
+            <div className="flex items-center gap-2 text-red-700">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-medium">End time must be after start time</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="bg-gray-50 p-6 rounded-b-2xl">
+        <div className="flex gap-3">
+          <button
+            onClick={handleScheduleSave}
+            disabled={!scheduleStart || !scheduleEnd || new Date(scheduleEnd) <= new Date(scheduleStart)}
+            className="flex-1 cursor-pointer bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 disabled:cursor-not-allowed shadow-lg"
+          >
+            Save Schedule
+          </button>
+          <button
+            onClick={() => setShowScheduleModal(false)}
+            className="px-6 py-3 cursor-pointer bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 shadow-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+        {/* Assign Modal */}
+     {showAssignModal && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all duration-300">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 rounded-t-2xl text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">Assign Test</h3>
+              <p className="text-green-100 text-sm">Select candidates to assign this test</p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setShowAssignModal(false);
+              setSearchTerm(""); // Clear search when closing
+            }}
+            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6">
+        {/* Selection Summary */}
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-green-700">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-medium">
+                {selectedCandidateIds.length} candidate{selectedCandidateIds.length !== 1 ? 's' : ''} selected
+              </span>
+            </div>
+            {searchTerm && (
+              <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                {filteredCandidates.length} of {candidates.length} shown
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search candidates by name or email..."
+              className="w-full pl-12 pr-10 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-green-200 focus:border-green-400 transition-all duration-300 bg-gradient-to-r from-gray-50 to-white text-gray-800 placeholder-gray-400 shadow-inner"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Candidates List */}
+        <div className="space-y-3 max-h-80 overflow-y-auto custom-scrollbar pr-2">
+          {filteredCandidates.length === 0 ? (
+            <div className="text-center py-12">
+              {searchTerm ? (
+                <>
+                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <p className="text-gray-500 font-medium">No candidates match "{searchTerm}"</p>
+                  <p className="text-gray-400 text-sm mt-1">Try adjusting your search terms</p>
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="mt-3 text-green-600 hover:text-green-700 font-medium text-sm"
+                  >
+                    Clear search
+                  </button>
+                </>
+              ) : candidates.length === 0 ? (
+                <>
+                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <p className="text-gray-500 font-medium">No candidates available</p>
+                  <p className="text-gray-400 text-sm mt-1">Add candidates to your company first</p>
+                </>
+              ) : null}
+            </div>
+          ) : (
+            filteredCandidates.map((c, index) => (
+              <label
+                key={c.user_id}
+                className="flex items-center p-5 bg-gradient-to-r from-white to-gray-50 hover:from-green-50 hover:to-blue-50 rounded-2xl cursor-pointer transition-all duration-300 group border-2 border-transparent hover:border-green-200 hover:shadow-lg transform hover:-translate-y-1"
+              >
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedCandidateIds.includes(c.user_id)}
+                    onChange={() => toggleCandidate(c.user_id)}
+                    className="w-6 h-6 text-green-600 border-2 border-gray-300 rounded-lg focus:ring-green-500 focus:ring-3 transition-all duration-200 hover:border-green-400"
+                  />
+                  <div className="absolute inset-0 rounded-lg bg-green-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                </div>
+                
+                <div className="ml-5 flex-1">
+                  <div className="flex items-center gap-4">
+                    {/* Enhanced Avatar */}
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-400 via-blue-400 to-purple-400 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                        {c.name.charAt(0).toUpperCase()}
+                      </div>
+                      {selectedCandidateIds.includes(c.user_id) && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Enhanced Candidate Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-gray-800 group-hover:text-green-700 transition-colors duration-200 text-lg">
+                        {c.name}
+                      </div>
+                      <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 bg-gray-100 rounded-full px-3 py-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          <span className="truncate font-medium">{c.email}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Selection Indicator */}
+                    <div className="flex items-center">
+                      {selectedCandidateIds.includes(c.user_id) ? (
+                        <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-400 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-100 group-hover:bg-green-100 rounded-2xl flex items-center justify-center transition-all duration-300">
+                          <svg className="w-5 h-5 text-gray-400 group-hover:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </label>
             ))
           )}
         </div>
 
-        {showScheduleModal && (
-          <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4">Set Test Schedule</h3>
-
-              <label className="text-sm font-medium text-gray-600">
-                Start Date & Time
-              </label>
-              <input
-                type="datetime-local"
-                value={scheduleStart}
-                onChange={(e) => setScheduleStart(e.target.value)}
-                className="w-full border rounded px-3 py-2 mb-3"
-              />
-
-              <label className="text-sm font-medium text-gray-600">
-                End Date & Time
-              </label>
-              <input
-                type="datetime-local"
-                value={scheduleEnd}
-                onChange={(e) => setScheduleEnd(e.target.value)}
-                className="w-full border rounded px-3 py-2 mb-3"
-              />
-
-              <div className="mt-4 flex gap-2">
+        {/* Select All / Clear All */}
+        {filteredCandidates.length > 0 && (
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-medium">Quick Actions:</span>
+              </div>
+              <div className="flex gap-3">
                 <button
-                  onClick={handleScheduleSave}
-                  className="bg-purple-600 cursor-pointer text-white px-4 py-2 rounded">
-                  Save Schedule
+                  onClick={() => {
+                    filteredCandidates.forEach(c => {
+                      if (!selectedCandidateIds.includes(c.user_id)) {
+                        toggleCandidate(c.user_id);
+                      }
+                    });
+                  }}
+                  disabled={filteredCandidates.every(c => selectedCandidateIds.includes(c.user_id))}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Select All {searchTerm && `(${filteredCandidates.length})`}
                 </button>
                 <button
-                  onClick={() => setShowScheduleModal(false)}
-                  className="bg-gray-300 cursor-pointer px-4 py-2 rounded">
-                  Cancel
+                  onClick={() => {
+                    filteredCandidates.forEach(c => {
+                      if (selectedCandidateIds.includes(c.user_id)) {
+                        toggleCandidate(c.user_id);
+                      }
+                    });
+                  }}
+                  disabled={!filteredCandidates.some(c => selectedCandidateIds.includes(c.user_id))}
+                  className="px-4 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white text-sm font-medium rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Clear All
                 </button>
               </div>
             </div>
           </div>
         )}
+      </div>
 
-        {/* Assign Modal */}
-        {showAssignModal && (
-          <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4">Assign Test</h3>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {candidates.map((c) => (
-                  <label
-                    key={c.user_id}
-                    className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedCandidateIds.includes(c.user_id)}
-                      onChange={() => toggleCandidate(c.user_id)}
-                    />
-                    <span>
-                      {c.name} ({c.email})
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={handleAssign}
-                  className="bg-green-600 text-white px-4 cursor-pointer py-2 rounded">
-                  Assign
-                </button>
-                <button
-                  onClick={() => setShowAssignModal(false)}
-                  className="bg-gray-300 px-4 cursor-pointer py-2 rounded">
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Footer */}
+      <div className="bg-gray-50 p-6 rounded-b-2xl">
+        <div className="flex gap-3">
+          <button
+            onClick={handleAssign}
+            disabled={selectedCandidateIds.length === 0}
+            className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+            Assign Test ({selectedCandidateIds.length})
+          </button>
+          <button
+            onClick={() => {
+              setShowAssignModal(false);
+              setSearchTerm(""); // Clear search when closing
+            }}
+            className="px-6 py-3 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 shadow-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </div>
   );

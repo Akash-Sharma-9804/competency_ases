@@ -262,11 +262,13 @@ export default function ExamPage() {
       socketRef.current.on("question-loaded", (data) => {
         console.log("🤖 [AI-ROBUST] Question loaded:", data);
 
-        // Reset all states for new question
+        // Reset ALL states completely for new question
         setVoiceTestActive(true);
         voiceTestActiveRef.current = true;
         setCurrentIndex(data.questionIndex);
         setTranscript("");
+        setFullTranscript("");
+        setPreservedAnswerTranscript("");
         setShowReRecordOptions(false);
         setIsVoiceConfirmation(false);
         isVoiceConfirmationRef.current = false;
@@ -305,21 +307,7 @@ export default function ExamPage() {
           setFullTranscript("");
         }
 
-        // Auto-play TTS if requested
-        // if (data.autoPlayTTS) {
-        //   setTimeout(() => {
-        //     console.log(
-        //       `🔊 [AUTO-PLAY] Playing question ${
-        //         data.questionIndex + 1
-        //       } with autoStartSTT: ${data.autoStartSTT}`
-        //     );
-        //     console.log(
-        //       `🔊 [AUTO-PLAY] Voice test state before audio - State: ${voiceTestActive}, Ref: ${voiceTestActiveRef.current}`
-        //     );
-        //     playQuestionAudio(data.questionIndex + 1, false);
-
-        //   }, 500);
-        // }
+      
 
         if (data.questionIndex === 0) {
           toast.success("Voice test started!");
@@ -345,63 +333,12 @@ export default function ExamPage() {
 
       socketRef.current.on("live-transcription", ({ text, isFinal }) => {
         console.log("📝 [FRONTEND-STT] Transcript:", text, "| Final:", isFinal);
-
-        if (aiMode) {
-          if (!isFinal) {
+if (!isFinal) {
             // interim update only
             setTranscript(text);
-          } else {
-            // Quick local confirmation shortcut: if we're waiting for a confirmation,
-            // check for submit/reanswer keywords and notify backend immediately.
-            if (isVoiceConfirmationRef.current) {
-              const l = (text || "").toLowerCase();
-              if (/\b(submit|save|final|done|yes)\b/.test(l)) {
-                console.log(
-                  "🧾 [CONFIRM] Detected submit (local), emitting user-intent"
-                );
-                socketRef.current?.emit("user-intent", { intent: "submit" });
-                return;
-              }
-              if (
-                /\b(reanswer|retry|try again|again|re-record|re record)\b/.test(
-                  l
-                )
-              ) {
-                console.log(
-                  "🧾 [CONFIRM] Detected reanswer (local), emitting user-intent"
-                );
-                socketRef.current?.emit("user-intent", { intent: "reanswer" });
-                return;
-              }
-            }
-
-            // Normal final transcript handling
-            setTranscript("");
-            setConversationHistory((prev) => {
-              if (prev.length && prev[prev.length - 1].message === text)
-                return prev; // skip duplicate
-              return [
-                ...prev,
-                { type: "user", message: text, timestamp: Date.now() },
-              ];
-            });
-            setFullTranscript((prev) =>
-              prev && prev.endsWith(text)
-                ? prev
-                : `${prev ? prev + " " : ""}${text}`
-            );
-            setPreservedAnswerTranscript((prev) =>
-              prev && prev.endsWith(text)
-                ? prev
-                : `${prev ? prev + " " : ""}${text}`
-            );
-
-            // 🔗 Send final to backend for AI intent check
-            // socketRef.current?.emit("analyze-user-speech", {
-            //   transcript: text,
-            //   questionIndex: currentIndex,
-            // });
           }
+        if (aiMode) {
+           
 
           return;
         }
@@ -857,6 +794,12 @@ export default function ExamPage() {
     questionNumber = currentIndex + 1,
     autoStartSTTAfter = false
   ) => {
+    // Prevent multiple simultaneous TTS plays
+    if (isPlayingTTSRef.current) {
+      console.log("🔇 [AUDIO] TTS already playing, ignoring request");
+      return;
+    }
+
     try {
       const testId = localStorage.getItem("testId");
       const token = localStorage.getItem("token");
@@ -871,6 +814,10 @@ export default function ExamPage() {
         toast.error("Test ID not found");
         return;
       }
+
+      // Set playing state
+      setIsPlayingTTS(true);
+      isPlayingTTSRef.current = true;
 
       // Fix URL construction - remove /api if it's already in VITE_API_BASE_URL
       let baseUrl =
@@ -916,9 +863,16 @@ export default function ExamPage() {
       audio.onended = () => {
         console.log("🏁 [AUDIO] Question TTS finished");
         setIsPlayingTTS(false);
+        isPlayingTTSRef.current = false;
 
         // ✅ Tell backend to begin listening
         socketRef.current?.emit("start-stt", { questionIndex: currentIndex });
+      };
+
+      audio.onerror = (e) => {
+        console.error("❌ [AUDIO] Audio error occurred:", e);
+        setIsPlayingTTS(false);
+        isPlayingTTSRef.current = false;
       };
 
       // Wait for audio to load
@@ -947,9 +901,13 @@ export default function ExamPage() {
         toast.error("Server error generating audio");
       } else {
         toast.error("Failed to play question audio: " + errorMessage);
-      }
-    }
-  };
+       }
+       
+       // Ensure playing state is reset on error
+       setIsPlayingTTS(false);
+       isPlayingTTSRef.current = false;
+     }
+   };
 
   const handleSelectQuestion = (index) => {
     console.log(`📍 [NAV] Navigating to question ${index + 1}`);
@@ -1505,11 +1463,11 @@ export default function ExamPage() {
                           {voiceTestActive ? "Ready" : "Loading"}
                         </span>
                       </div>
-                      <button
+                      {/* <button
                         onClick={() => playQuestionAudio(currentIndex + 1)}
                         className="px-2 py-1 bg-blue-600 text-white rounded-full text-xs font-medium hover:bg-blue-700 transition-colors">
                         🔊
-                      </button>
+                      </button> */}
                       <button
                         onClick={toggleRecording}
                         disabled={!voiceTestActive}
