@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { authAPI } from "../../utils/api";
+import toast from "react-hot-toast";
 
 const UserSignup = () => {
   const navigate = useNavigate();
@@ -17,11 +18,11 @@ const UserSignup = () => {
     setLoading(true);
     try {
       await authAPI.userRegister(form);
-      alert("✅ User registered successfully! Please login.");
-      navigate("/"); // go back to login page
+      toast.success("✅ User registered successfully! Please login.");
+      navigate("/user-login"); // go back to user login page
     } catch (err) {
       console.error(err);
-      alert(err.message || "Registration failed");
+      toast.error(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -124,7 +125,7 @@ const UserSignup = () => {
               <p className="text-center text-sm text-gray-600 mt-4">
                 Already have an account?{" "}
                 <button
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/user-login")}
                   className="text-indigo-600 cursor-pointer font-semibold hover:underline"
                   type="button"
                 >

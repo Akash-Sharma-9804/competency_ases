@@ -41,10 +41,10 @@ const ScreenShareCheck = ({ onVerified }) => {
     }
   };
 
-  useEffect(() => {
-    startScreenCapture();
-    startCameraCapture();
-  }, []);
+ useEffect(() => {
+  startCameraCapture(); // only auto-start camera
+}, []);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-slate-100 flex flex-col items-center justify-center px-4 py-6">
@@ -81,11 +81,15 @@ const ScreenShareCheck = ({ onVerified }) => {
 
         <div className="flex flex-col items-center">
           <button
-            onClick={onVerified}
-            className="bg-blue-600 text-white text-lg font-medium px-6 py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md"
-          >
-            ✅ Start Test
-          </button>
+  onClick={async () => {
+    await startScreenCapture();
+    onVerified();
+  }}
+  className="bg-blue-600 text-white text-lg font-medium px-6 py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md"
+>
+  ✅ Start Test
+</button>
+
           <p className="text-sm text-red-500 mt-2">
             Tab switch warnings: {tabSwitchCount}
           </p>

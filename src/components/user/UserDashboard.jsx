@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 
 // Sub-components
 import DashboardHome from "./UserHome";
+import UserHome3 from "./UserHome3";
 import Exams from "./Exams";
 import Results from "./Results";
 import Profile from "./Profile";
@@ -51,11 +52,11 @@ const UserDashboard = () => {
 
   const menuItems = [
     { path: "", icon: <Home className="w-5 h-5" />, label: "Dashboard" },
-    { path: "exams", icon: <BookOpen className="w-5 h-5" />, label: "My Exams" },
-    { path: "create-test", icon: <SquarePen className="w-5 h-5" />, label: "Create Test" },
-    { path: "results", icon: <BarChart3 className="w-5 h-5" />, label: "Results" },
-    { path: "profile", icon: <User className="w-5 h-5" />, label: "Profile" },
-    { path: "help", icon: <HelpCircle className="w-5 h-5" />, label: "Help" },
+    // { path: "exams", icon: <BookOpen className="w-5 h-5" />, label: "My Exams" },
+    // { path: "create-test", icon: <SquarePen className="w-5 h-5" />, label: "Create Test" },
+    // { path: "results", icon: <BarChart3 className="w-5 h-5" />, label: "Results" },
+    // { path: "profile", icon: <User className="w-5 h-5" />, label: "Profile" },
+    // { path: "help", icon: <HelpCircle className="w-5 h-5" />, label: "Help" },
   ];
 
   return (
@@ -110,7 +111,7 @@ const UserDashboard = () => {
           <button
             onClick={() => {
               localStorage.clear();
-              navigate("/");
+              navigate("/user-login");
             }}
             className="w-full flex cursor-pointer items-center space-x-2 px-4 py-2 rounded-lg hover:bg-red-50 text-red-600 font-medium"
           >
@@ -131,7 +132,9 @@ const UserDashboard = () => {
         <main className=" pt-0 px-6 pb-6 flex-1 overflow-y-auto">
           <Routes>
             <Route index element={<DashboardHome user={user} />} />
-            <Route path="exams" element={<Exams />} />
+            {/* <Route path="exams" element={<Exams />} /> */}
+            <Route path="exams" element={<UserHome3 />} />
+
             <Route path="create-test" element={<UserCreateTest />} />
             <Route path="results" element={<Results />} />
             <Route path="profile" element={<Profile />} />

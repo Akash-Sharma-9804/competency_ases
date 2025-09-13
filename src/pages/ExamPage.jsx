@@ -16,8 +16,14 @@ import {
   createWebSocketConnection,
   createAudioStreamer,
 } from "../utils/websocket";
+import { getBaseUrl } from '../utils/api';
+
 
 export default function ExamPage() {
+
+  
+ 
+
   // State for questions and loading
   const [questions, setQuestions] = useState([]);
 
@@ -194,6 +200,10 @@ export default function ExamPage() {
       `🔄 [CACHE] Pre-generating audio for ${questions.length} questions...`
     );
 
+    // Fix URL construction - remove /api if it's already in VITE_API_BASE_URL
+   const baseUrl = getBaseUrl(); // universal base URL from api.js
+
+
     // Generate all audio files in parallel (max 5 concurrent requests)
     const batchSize = 5;
     for (let i = 0; i < questions.length; i += batchSize) {
@@ -202,7 +212,7 @@ export default function ExamPage() {
         const questionNumber = j + 1;
         batch.push(
           fetch(
-            `http://localhost:5000/api/tests/${testId}/question-audio/${questionNumber}`,
+            `${baseUrl}/tests/${testId}/question-audio/${questionNumber}`,
             {
               method: "HEAD",
             }
@@ -820,13 +830,9 @@ if (!isFinal) {
       isPlayingTTSRef.current = true;
 
       // Fix URL construction - remove /api if it's already in VITE_API_BASE_URL
-      let baseUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-      if (!baseUrl.includes("/api")) {
-        baseUrl += "/api";
-      }
+    const baseUrl = getBaseUrl(); // gets base URL from api.js / env
+const audioUrl = `${baseUrl}/api/tests/${testId}/question-audio/${questionNumber}`;
 
-      const audioUrl = `${baseUrl}/tests/${testId}/question-audio/${questionNumber}`;
       console.log("🔗 [AUDIO] Audio URL:", audioUrl);
 
       // Test if URL is reachable first

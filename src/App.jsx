@@ -12,6 +12,7 @@ import ScreenShareCheck from "./pages/ScreenShareCheck";
 import UserDashboard from "./components/user/UserDashboard";
 // import UserDetails from "./components/user/UserDetails";
 import UserSignup from "./components/user/UserSignup";
+import UserLogin from "./components/user/UserLogin";
 
 // ✅ Company Dashboard
 import CompanyDashboard from "./components/company/CompanyDashboard";
@@ -31,6 +32,7 @@ function App() {
   <Route path="/image-verification" element={<ImageVerification />} />
   <Route path="/screen-check" element={<ScreenShareCheck />} />
   <Route path="/exam" element={<ExamPage />} />
+  <Route path="/user-login" element={<UserLogin />} />
   <Route path="/user-signup" element={<UserSignup />} />
   <Route path="/company-register" element={<CompanySignup />} />
 

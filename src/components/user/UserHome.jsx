@@ -28,7 +28,7 @@ import { useNavigate} from "react-router-dom";
 import { useDispatch } from "react-redux";
 import "../common/animations.css";
 
-const UserHome = () => {
+const UserHome = ({ user }) => {
   const [assignedTests, setAssignedTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -41,7 +41,6 @@ const navigate = useNavigate();
   const [userStats] = useState({
     testsCompleted: 12,
     averageScore: 87,
-    streak: 7,
     rank: 23,
     totalHours: 45,
     achievements: 8,
@@ -52,7 +51,7 @@ const navigate = useNavigate();
   const [quickStats] = useState([
     { label: "Tests This Week", value: 3, icon: Calendar, color: "blue" },
     { label: "Average Score", value: "87%", icon: Target, color: "green" },
-    { label: "Current Streak", value: "7 days", icon: Flame, color: "orange" },
+    { label: "Total Hours", value: "45h", icon: Clock, color: "orange" },
     { label: "Global Rank", value: "#23", icon: Trophy, color: "purple" }
   ]);
 
@@ -190,7 +189,7 @@ const navigate = useNavigate();
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         {/* Welcome Header with Animation */}
         <div
@@ -203,10 +202,10 @@ const navigate = useNavigate();
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2 animate-bounce">
-                {greeting}! 👋
+                {greeting}, {user?.name || 'Champion'}! 👋
               </h1>
               <p className="text-white/90 text-lg mb-4">
-                Ready to ace your tests today?
+               Ready to ace your interviews today?
               </p>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-1">
@@ -215,23 +214,12 @@ const navigate = useNavigate();
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  {currentTime.toLocaleTimeString()}
+                  {currentTime.toLocaleTimeString()} ({Intl.DateTimeFormat().resolvedOptions().timeZone})
                 </div>
               </div>
             </div>
-            
-            <div className="mt-4 md:mt-0 flex flex-col items-end">
-              <div className="text-right">
-                <p className="text-2xl font-bold">Level {userStats.level}</p>
-                <p className="text-white/90">XP: {userStats.xp.toLocaleString()}</p>
-              </div>
-              <div className="mt-2 w-32 h-2 bg-white/20 rounded-full">
-                <div 
-                  className="h-2 bg-white rounded-full transition-all duration-1000"
-                  style={{ width: `${(userStats.xp % 1000) / 10}%` }}
-                ></div>
-              </div>
-            </div>
+             
+          
           </div>
           
           {/* Floating decorative elements */}
@@ -240,7 +228,7 @@ const navigate = useNavigate();
         </div>
 
         {/* Quick Stats with Staggered Animation */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {quickStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -263,22 +251,22 @@ const navigate = useNavigate();
               </div>
             );
           })}
-        </div>
+        </div> */}
 
         {/* Motivation Banner */}
-        <div 
-          className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl p-6 text-white shadow-lg"
+        <div
+          className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-lg"
           style={{ animation: "slideInFromLeft 0.8s ease-out 0.5s both" }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="text-4xl animate-bounce">🚀</div>
+              <div className="text-4xl animate-bounce">🌟</div>
               <div>
-                <h3 className="text-xl font-bold">You're on fire!</h3>
-                <p className="opacity-90">Keep up the great work with your {userStats.streak}-day streak!</p>
+                <h3 className="text-xl font-bold">You've got this!</h3>
+                <p className="opacity-90">Every test brings you closer to your dream job. Keep pushing!</p>
               </div>
             </div>
-            <Coffee className="w-8 h-8 opacity-80" />
+            <Brain className="w-8 h-8 opacity-80" />
           </div>
         </div>
 
@@ -302,7 +290,7 @@ const navigate = useNavigate();
           </div>
 
           {upcomingTests.length === 0 ? (
-            <div className="text-center py-16">
+            <div className="text-center py-16 bg-white/70 backdrop-blur-xl rounded-3xl p-16 text-center shadow-lg border border-white/20">
               <div className="mb-8">
                 <div className="text-8xl mb-4 animate-bounce">📚</div>
               </div>
@@ -311,14 +299,7 @@ const navigate = useNavigate();
               <p className="text-gray-600 mb-4">No upcoming tests assigned at the moment.</p>
               <p className="text-sm text-gray-500">Check back later or contact your administrator for new assignments.</p>
               
-              <div className="mt-8 flex justify-center gap-4">
-                <button className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105">
-                  View All Tests
-                </button>
-                <button className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300 hover:scale-105">
-                  Practice Mode
-                </button>
-              </div>
+         
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -460,9 +441,9 @@ const navigate = useNavigate();
         </div>
 
         {/* Additional Dashboard Sections */}
-        <div className="grid lg:grid-cols-3 gap-6 mt-8">
+        {/* <div className="grid lg:grid-cols-3 gap-6 mt-8"> */}
           {/* Recent Activity */}
-          <div 
+          {/* <div 
             className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
             style={{ animation: "slideInFromLeft 0.8s ease-out 1.2s both" }}
           >
@@ -488,10 +469,10 @@ const navigate = useNavigate();
                 );
               })}
             </div>
-          </div>
+          </div> */}
 
           {/* Quick Actions */}
-          <div 
+          {/* <div 
             className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
             style={{ animation: "slideInFromBottom 0.8s ease-out 1.3s both" }}
           >
@@ -531,32 +512,32 @@ const navigate = useNavigate();
                 </div>
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Achievements & Progress */}
-          <div 
+          {/* <div 
             className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
             style={{ animation: "slideInFromRight 0.8s ease-out 1.4s both" }}
-          >
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          > */}
+            {/* <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-600" />
               Achievements
-            </h3>
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            </h3> */}
+            {/* <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="text-center p-3 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg hover:scale-105 transition-transform">
                 <Trophy className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-gray-800">{userStats.achievements}</p>
                 <p className="text-xs text-gray-600">Unlocked</p>
               </div>
               <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg hover:scale-105 transition-transform">
-                <Flame className="w-6 h-6 text-orange-600 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-gray-800">{userStats.streak}</p>
-                <p className="text-xs text-gray-600">Day Streak</p>
+                <Trophy className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-gray-800">{userStats.achievements}</p>
+                <p className="text-xs text-gray-600">Achievements</p>
               </div>
-            </div>
+            </div> */}
             
             {/* Progress to next level - only show if user has XP */}
-            {userStats.xp > 0 && (
+            {/* {userStats.xp > 0 && (
               <div className="bg-gray-50 rounded-lg p-3">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium text-gray-700">Next Level</span>
@@ -569,9 +550,9 @@ const navigate = useNavigate();
                   ></div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+            )} */}
+          {/* </div> */}
+        {/* </div> */}
       </div>
 
       

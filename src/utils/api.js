@@ -257,4 +257,10 @@ export const api = {
     handleApiRequest(() => apiClient.delete(endpoint, options)),
 };
 
+// At the bottom of api.js
+export const getBaseUrl = () => {
+  // This returns the same base URL as apiClient without modifying /api
+  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+};
+
 export default api;

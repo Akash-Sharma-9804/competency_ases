@@ -1,37 +1,63 @@
 import { io } from "socket.io-client";
 
 // WebSocket configuration
+import { getBaseUrl } from './api'; // adjust path if needed
+
 const getWebSocketConfig = () => {
-  // Use environment variable with fallback
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-  const socketUrl = baseUrl.replace('/api', '');
-  
-  const config = {
+  const socketUrl = import.meta.env.VITE_WS_URL;
+  console.log('🔌 [WS-CONFIG] Using WebSocket URL:', socketUrl);
+
+  return {
     url: socketUrl,
     options: {
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'],
+      path: '/socket.io',
       timeout: 10000,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       maxReconnectionDelay: 5000,
       autoConnect: true,
-      forceNew: false
+      forceNew: true,
+      secure: socketUrl.startsWith('wss://'),
+      rejectUnauthorized: false
+    }
+  };
+};
+
+
+// Alternative method for trying specific namespaces
+export const createWebSocketConnectionWithNamespace = (namespace = '/', eventHandlers = {}) => {
+  const { url, options } = getWebSocketConfig();
+  
+  console.log(`🔌 [WS-NS] Creating WebSocket connection to namespace: ${namespace}`);
+  
+  const connectionOptions = {
+    ...options,
+    path: '/socket.io',
+    transports: ['websocket'],
+    secure: url.startsWith('wss://'),
+    rejectUnauthorized: false,
+    query: {
+      token: localStorage.getItem('token'),
+      testId: localStorage.getItem('testId'),
+      userId: localStorage.getItem('userId'),
+      client: 'web-voice-test',
+      namespace: namespace
     }
   };
   
-  console.log('🔌 [WS-CONFIG] WebSocket configuration:', config);
-  return config;
+  // Create connection with specific namespace
+  const socket = io(`${url}${namespace}`, connectionOptions);
+  
+  // Set up event handlers (same as main function)
+  setupSocketEvents(socket, eventHandlers);
+  
+  return socket;
 };
 
-// Create WebSocket connection with enhanced error handling
-export const createWebSocketConnection = (eventHandlers = {}) => {
-  const { url, options } = getWebSocketConfig();
-  
-  console.log('🔌 [WS] Creating WebSocket connection to:', url);
-  const socket = io(url, options);
-  
-  // Enhanced connection events
+// Common event setup function
+const setupSocketEvents = (socket, eventHandlers) => {
   socket.on('connect', () => {
     console.log('✅ [WS] Connected to voice test server');
     if (eventHandlers.onConnect) eventHandlers.onConnect();
@@ -44,9 +70,24 @@ export const createWebSocketConnection = (eventHandlers = {}) => {
   
   socket.on('connect_error', (error) => {
     console.error('❌ [WS] Connection error:', error);
+    console.error('❌ [WS] Error details:', {
+      message: error.message,
+      description: error.description,
+      context: error.context
+    });
+    
+    if (error.message.includes('Invalid namespace')) {
+      console.error('⚠️ [WS] Namespace issue detected.');
+      console.error('⚠️ [WS] Try using createWebSocketConnectionWithNamespace() with specific namespaces:');
+      console.error('⚠️ [WS] - "/voice-test"');
+      console.error('⚠️ [WS] - "/exam"');
+      console.error('⚠️ [WS] - "/audio"');
+    }
+    
     if (eventHandlers.onError) eventHandlers.onError(error);
   });
   
+  // Other event handlers...
   socket.on('reconnect', (attemptNumber) => {
     console.log(`🔄 [WS] Reconnected after ${attemptNumber} attempts`);
     if (eventHandlers.onReconnect) eventHandlers.onReconnect(attemptNumber);
@@ -56,6 +97,40 @@ export const createWebSocketConnection = (eventHandlers = {}) => {
     console.error('❌ [WS] Reconnection error:', error);
     if (eventHandlers.onReconnectError) eventHandlers.onReconnectError(error);
   });
+};
+
+
+
+// Create WebSocket connection with enhanced error handling
+export const createWebSocketConnection = (eventHandlers = {}) => {
+  const { url, options } = getWebSocketConfig();
+  
+  console.log('🔌 [WS] Creating WebSocket connection to:', url);
+  
+  // Enhanced connection options with authentication and fallback support
+  const connectionOptions = {
+    ...options,
+    path: '/socket.io',   // ensure path is correct
+    transports: ['websocket'], // force websocket
+    secure: url.startsWith('wss://'), // enable WSS
+    rejectUnauthorized: false, // ⚠️ optional for self-signed certs
+    // Add authentication and context information
+    query: {
+      token: localStorage.getItem('token'),
+      testId: localStorage.getItem('testId'),
+      userId: localStorage.getItem('userId'),
+      client: 'web-voice-test'
+    },
+    // Additional connection settings for better reliability
+    forceNew: true,
+    timeout: 15000,
+    reconnectionDelayMax: 10000
+  };
+  
+  const socket = io(url, connectionOptions);
+
+  // Use the shared event setup function
+  setupSocketEvents(socket, eventHandlers);
   
   return socket;
 };
@@ -121,8 +196,8 @@ export const createAudioStreamer = (socket) => {
           
           // Send with metadata
           if (socket.connected) {
-           socket.emit("audio-data", Buffer.from(int16Array.buffer));
-
+           // Convert Int16Array to ArrayBuffer for socket.io transmission
+           socket.emit("audio-data", int16Array.buffer);
           }
         }
       };
@@ -178,4 +253,8 @@ export const createAudioStreamer = (socket) => {
   };
 };
 
-export default { createWebSocketConnection, createAudioStreamer };
+export default {
+  createWebSocketConnection,
+  createWebSocketConnectionWithNamespace,
+  createAudioStreamer
+};

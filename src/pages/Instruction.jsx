@@ -131,8 +131,9 @@ const Instruction = () => {
               className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-300 text-center">
               Back to Home
             </Link>
+   
             <Link
-              to={agreed ? "/exam" : "#"}
+              to={agreed ? "/screen-check" : "#"}
               onClick={(e) => {
                 if (!agreed) {
                   e.preventDefault();

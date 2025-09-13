@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Navbar from "../components/user/Navbar";
-import { authAPI } from "../utils/api";
-import PasswordInput from "../components/common/PasswordInput"; // adjust path if needed
+import Navbar from "../user/Navbar";
+import { authAPI } from "../../utils/api";
+import PasswordInput from "../common/PasswordInput";
 import toast from "react-hot-toast";
 
-const Homepage = () => {
+const UserLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,14 +15,13 @@ const Homepage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const credentials = { email, contact_email: email, password }; // backend expects contact_email for companies
-
-      const data = await authAPI.companyLogin(credentials);
+      const credentials = { email, password };
+      const data = await authAPI.userLogin(credentials);
 
       if (data.token) {
         localStorage.setItem("token", data.token);
-        localStorage.setItem("role", "company");
-        navigate("/company-dashboard/");
+        localStorage.setItem("role", "user");
+        navigate("/user-dashboard/");
       }
     } catch (err) {
       console.error(err);
@@ -35,8 +34,8 @@ const Homepage = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
-    if (token && role === "company") {
-      navigate("/company-dashboard/");
+    if (token && role === "user") {
+      navigate("/user-dashboard/");
     }
   }, []);
 
@@ -52,11 +51,11 @@ const Homepage = () => {
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
             <div className="relative z-10 text-center md:text-left max-w-lg transition-all duration-500">
               <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-md leading-tight">
-                Manage Your Company Exams
+                Welcome Back, Candidate!
               </h1>
               <p className="mt-4 text-white/90 text-sm md:text-base leading-relaxed">
-                Login to create and schedule tests, track candidates, and
-                view analytics for your organization.
+                Sign in to take your scheduled exams, check results, and
+                access your dashboard.
               </p>
             </div>
           </div>
@@ -68,10 +67,10 @@ const Homepage = () => {
 
             <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/80 backdrop-blur-xl shadow-2xl p-8">
               <h2 className="text-3xl font-bold text-center text-gray-800">
-                Company Login
+                User Login
               </h2>
               <p className="text-center text-sm text-gray-500 mt-2 mb-8">
-                Access your company dashboard
+                Access your user dashboard
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,7 +96,7 @@ const Homepage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="border-gray-300 text-sm" // merges with default styles inside component
+                    className="border-gray-300 text-sm"
                     inputProps={{ required: true }}
                   />
                 </div>
@@ -105,25 +104,29 @@ const Homepage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="block w-full cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-transform transform hover:scale-[1.02] duration-300 shadow-md text-center flex items-center justify-center">
+                  className="block w-full cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-transform transform hover:scale-[1.02] duration-300 shadow-md text-center flex items-center justify-center"
+                >
                   {loading ? (
                     <>
                       <svg
                         className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
-                        viewBox="0 0 24 24">
+                        viewBox="0 0 24 24"
+                      >
                         <circle
                           className="opacity-25"
                           cx="12"
                           cy="12"
                           r="10"
                           stroke="currentColor"
-                          strokeWidth="4"></circle>
+                          strokeWidth="4"
+                        ></circle>
                         <path
                           className="opacity-75"
                           fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Logging in...
                     </>
@@ -132,13 +135,15 @@ const Homepage = () => {
                   )}
                 </button>
               </form>
+              
               <p className="text-center text-sm text-gray-600 mt-4">
-                Don't have a company account?{" "}
+                Don't have an account?{" "}
                 <button
-                  onClick={() => navigate("/company-register")}
+                  onClick={() => navigate("/user-signup")}
                   className="text-indigo-600 cursor-pointer font-semibold hover:underline"
-                  type="button">
-                  Register here
+                  type="button"
+                >
+                  Sign up here
                 </button>
               </p>
             </div>
@@ -162,4 +167,4 @@ const Homepage = () => {
   );
 };
 
-export default Homepage;
+export default UserLogin;

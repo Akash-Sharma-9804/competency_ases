@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { testAPI } from "../../utils/api";
 
 const sectors = ["IT", "Education", "Healthcare", "Finance", "Retail", "Manufacturing"];
 
@@ -20,21 +21,12 @@ const CreateTest = () => {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      // Call your backend AI endpoint
-      const res = await fetch("http://localhost:5000/api/tests/generate-ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setQuestions(data.questions || []);
-      } else {
-        alert(data.message || "Failed to generate questions");
-      }
+      // Use centralized API function
+      const data = await testAPI.generateAIQuestions(form);
+      setQuestions(data.questions || []);
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      alert(err.message || "Failed to generate questions");
     } finally {
       setLoading(false);
     }
@@ -42,19 +34,12 @@ const CreateTest = () => {
 
   const handleSave = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/tests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: JSON.stringify({ ...form, questions }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert("✅ Test created successfully!");
-      } else {
-        alert(data.message || "Failed to save test");
-      }
+      // Use centralized API function
+      await testAPI.createTest({ ...form, questions });
+      alert("✅ Test created successfully!");
     } catch (err) {
       console.error(err);
+      alert(err.message || "Failed to save test");
     }
   };
 
